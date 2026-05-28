@@ -1,4 +1,5 @@
 import { User } from '../models/User.js';
+import { userService } from '../services/userService.js';
 
 export const userController = {
   getProfile: async (req, res, next) => {
@@ -27,10 +28,25 @@ export const userController = {
     }
   },
 
+  /**
+   * GET /api/users
+   * Query params: page (default 1), limit (default 10), role ('user'|'admin'), isActive ('true'|'false')
+   */
   getAllUsers: async (req, res, next) => {
     try {
-      const users = await User.find().select('-password');
-      res.status(200).json(users);
+      const { page = 1, limit = 10, role, isActive } = req.query;
+
+      const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+      const parsedPage = Math.max(parseInt(page, 10) || 1, 1);
+
+      const result = await userService.getAllUsers({
+        page: parsedPage,
+        limit: parsedLimit,
+        role,
+        isActive,
+      });
+
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }
