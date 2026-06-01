@@ -56,7 +56,8 @@ npm start
 ### Autenticación
 - `POST /api/auth/register` - Registrar nuevo usuario
 - `POST /api/auth/login` - Iniciar sesión
-- `GET /api/auth/validate` - Validar token
+- `GET /api/auth/validate` - Validar token (protegido)
+- `POST /api/auth/logout-all` - Cerrar sesión en todos los dispositivos (protegido)
 
 ### Usuarios
 - `GET /api/users/profile` - Obtener perfil del usuario (protegido)
@@ -71,6 +72,8 @@ Se utiliza JWT (JSON Web Tokens). Para acceder a rutas protegidas, incluir el to
 ```
 Authorization: Bearer <token>
 ```
+
+Los tokens incluyen `tokenVersion`. Cuando se llama `POST /api/auth/logout-all`, el backend incrementa `tokenVersion` del usuario y cualquier token emitido con una versión anterior queda inválido (401).
 
 ## 📋 Estructura del Proyecto
 

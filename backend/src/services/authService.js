@@ -2,9 +2,9 @@ import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 
 export const authService = {
-  generateToken: (userId) => {
+  generateToken: (userId, tokenVersion = 0) => {
     return jwt.sign(
-      { id: userId },
+      { id: userId, tokenVersion },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRE || '7d' }
     );
@@ -24,7 +24,7 @@ export const authService = {
       password,
     });
 
-    const token = authService.generateToken(user._id);
+    const token = authService.generateToken(user._id, user.tokenVersion);
     return { user: { id: user._id, name: user.name, email: user.email, role: user.role }, token };
   },
 
@@ -39,8 +39,22 @@ export const authService = {
       throw new Error('Usuario o contraseña incorrectos');
     }
 
-    const token = authService.generateToken(user._id);
+    const token = authService.generateToken(user._id, user.tokenVersion);
     return { user: { id: user._id, name: user.name, email: user.email, role: user.role }, token };
+  },
+
+  logoutAllDevices: async (userId) => {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $inc: { tokenVersion: 1 } },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    return user.tokenVersion;
   },
 
   validateToken: (token) => {

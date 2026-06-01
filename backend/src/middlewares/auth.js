@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
 
-export const protect = (req, res, next) => {
+export const protect = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
 
@@ -9,6 +10,16 @@ export const protect = (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select('_id tokenVersion');
+
+    if (!user) {
+      return res.status(401).json({ error: 'Token inválido o expirado' });
+    }
+
+    if ((decoded.tokenVersion ?? 0) !== user.tokenVersion) {
+      return res.status(401).json({ error: 'Token inválido o expirado' });
+    }
+
     req.userId = decoded.id;
     next();
   } catch (error) {

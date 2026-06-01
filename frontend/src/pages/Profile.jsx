@@ -4,15 +4,19 @@ import { userService } from '../services/userService'
 import Card from '../components/Card'
 import Button from '../components/Button'
 import Input from '../components/Input'
+import ConfirmModal from '../components/ConfirmModal'
 
 export default function Profile() {
-  const { user, isAuthenticated } = useAuth()
+  const { isAuthenticated, logoutAllDevices } = useAuth()
   const [profile, setProfile] = useState(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
+  const [isConfirmLogoutOpen, setIsConfirmLogoutOpen] = useState(false)
+  const [logoutAllError, setLogoutAllError] = useState(null)
+  const [isLoggingOutAll, setIsLoggingOutAll] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -50,6 +54,21 @@ export default function Profile() {
     }
   }
 
+  const handleConfirmLogoutAll = async () => {
+    try {
+      setIsLoggingOutAll(true)
+      setLogoutAllError(null)
+      await logoutAllDevices()
+      window.location.href = '/login'
+    } catch (err) {
+      const message = err.response?.data?.error || 'No se pudo cerrar sesión en todos los dispositivos'
+      setLogoutAllError(message)
+    } finally {
+      setIsLoggingOutAll(false)
+      setIsConfirmLogoutOpen(false)
+    }
+  }
+
   if (!isAuthenticated) {
     return null
   }
@@ -72,6 +91,12 @@ export default function Profile() {
         {success && (
           <div className="mb-4 p-4 bg-green-100 text-success rounded">
             ✓ Perfil actualizado exitosamente
+          </div>
+        )}
+
+        {logoutAllError && (
+          <div className="mb-4 p-4 bg-red-100 text-error rounded">
+            {logoutAllError}
           </div>
         )}
 
@@ -112,6 +137,13 @@ export default function Profile() {
               <Button type="submit" variant="primary">
                 Guardar Cambios
               </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setIsConfirmLogoutOpen(true)}
+              >
+                Cerrar sesión en todos los dispositivos
+              </Button>
               <Button type="button" variant="error" onClick={() => {
                 if (window.confirm('¿Estás seguro de eliminar tu cuenta?')) {
                   userService.deleteProfile().then(() => {
@@ -125,6 +157,17 @@ export default function Profile() {
           </form>
         )}
       </Card>
+
+      <ConfirmModal
+        open={isConfirmLogoutOpen}
+        title="Cerrar sesión en todos los dispositivos"
+        message="Esta acción invalidará todas tus sesiones activas. ¿Deseas continuar?"
+        confirmText="Sí, cerrar sesión"
+        cancelText="Cancelar"
+        isProcessing={isLoggingOutAll}
+        onCancel={() => setIsConfirmLogoutOpen(false)}
+        onConfirm={handleConfirmLogoutAll}
+      />
     </div>
   )
 }

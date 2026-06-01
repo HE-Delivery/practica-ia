@@ -1,4 +1,5 @@
 import { createContext, useState, useCallback, useEffect } from 'react'
+import { userService } from '../services/userService'
 
 export const AuthContext = createContext()
 
@@ -100,6 +101,21 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('token')
   }, [])
 
+  const logoutAllDevices = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      await userService.logoutAllDevices()
+      logout()
+    } catch (err) {
+      const message = err.response?.data?.error || 'No se pudo cerrar sesión en todos los dispositivos'
+      setError(message)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [logout])
+
   const value = {
     user,
     token,
@@ -108,6 +124,7 @@ export function AuthProvider({ children }) {
     login,
     register,
     logout,
+    logoutAllDevices,
     isAuthenticated: !!user && !!token,
   }
 

@@ -37,16 +37,18 @@ export const authController = {
   },
 
   validateToken: (req, res) => {
-    try {
-      const token = req.headers.authorization?.split(' ')[1];
-      if (!token) {
-        return res.status(401).json({ error: 'Token no proporcionado' });
-      }
+    res.status(200).json({ valid: true, userId: req.userId });
+  },
 
-      const decoded = authService.validateToken(token);
-      res.status(200).json({ valid: true, userId: decoded.id });
+  logoutAllDevices: async (req, res, next) => {
+    try {
+      const tokenVersion = await authService.logoutAllDevices(req.userId);
+      res.status(200).json({
+        message: 'Sesión cerrada en todos los dispositivos',
+        tokenVersion,
+      });
     } catch (error) {
-      res.status(401).json({ error: error.message });
+      next(error);
     }
   },
 };
