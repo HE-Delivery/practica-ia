@@ -1,4 +1,4 @@
-# Practica IA - Proyecto Fullstack
+# Practica IA - Proyecto Fullstack (Este es mi cambio)
 
 Proyecto fullstack completo con **Backend Node.js + Express** y **Frontend React** para practicar desarrollo web moderno.
 
